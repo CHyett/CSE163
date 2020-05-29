@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<body>
+<h1 style = "text-align:center; color:black"><bold> Florida Population Density </bold></h1>    
+
+    <pre style="position: absolute; bottom: 100px">
+        Cyrus Hyett
+        Instructor: Suresh Lodha
+        CSE163: Data Programming for Visualization
+        Spring 2020
+    </pre>
+
+</body>
+<svg width="960" height="1100"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src="https://d3js.org/topojson.v2.min.js"></script>
+<script>
+    
+var clicked = 0;
+var clicked1 = 0;
+var clicked2 = 0;
+
+var mapC;
+
+var svg = d3.select("svg"),
+    width = +svg.attr("width"),
+    height = +svg.attr("height");
+
+var path = d3.geoPath();
+
+var color = d3.scaleThreshold()
+    .domain([1, 10, 50, 200, 500, 1000, 2000, 4000])
+    .range(d3.schemeOrRd[9]);
+
+var x = d3.scaleSqrt()
+    .domain([0, 4500])
+    .rangeRound([440, 950]);
+
+var g = svg.append("g")
+    .attr("class", "key")
+    .attr("transform", "translate(0,40)");
+    
+    
+var menuDiv = d3.select("body");
+var menuButton = menuDiv.append("button")
+    .text("Toggle State Boundary")
+    .attr("id", "buttonCentre")
+    .classed("button", true)
+    .on('click', function(){
+        //d3.select("#buttonCentre").style("background-color", "#ccc")
+        if(clicked == 0){   
+            d3.json("florida.json", function(error, topology) {
+                if (error) throw error;
+
+
+            svg.append("path")
+                  .datum(topojson.mesh(topology, topology.objects.counties, function(a, b) { return a == b; }))
+                  .attr("fill", "none")
+                  .attr("id","id")
+                  .attr("stroke", "#000")
+                  .attr("stroke-opacity", 0.3)
+                  .attr("d", path);
+                
+           });
+            
+            
+                
+
+            clicked = 1;
+        }else{
+            d3.select("#id").remove();
+            clicked = 0;
+        }
+        
+    });
+    
+var menuDiv1 = d3.select("body");
+var menuButton1 = menuDiv1.append("button")
+    .text("Toggle Census Tract Boundary")
+    .attr("id", "buttonCentre")
+    .classed("button", true)
+    .on('click', function(){
+        if(clicked1 == 0){
+            d3.json("florida.json", function(error, topology) {
+                    if (error) throw error;
+                svg.append("path")
+                  .datum(topojson.feature(topology, topology.objects.tracts))
+                  .attr("fill", "none")
+                  .attr("id","id1")
+                  .attr("stroke", "#000")
+                  .attr("stroke-opacity", 0.2)
+                  .attr("d", path);
+            });
+            clicked1 = 1;
+        } else{
+            //d3.select("#buttonCentre").style("background-color", "#ccc")
+            d3.select("#id1").remove();
+            clicked1 = 0;
+
+        }
+        
+    });
+    
+    
+var menuDiv2 = d3.select("body");
+var menuButton2 = menuDiv1.append("button")
+    .text("Change Legend Color")
+    .attr("id", "buttonCentre")
+    .classed("button", true)
+    .on('click', function(){
+        //d3.select("#buttonCentre").style("background-color", "#900")
+        if(clicked2 == 0){
+            color.range(d3.schemePuRd[9]);
+            
+            tractPath.attr("fill", function(d) { return color(d[0]); });
+            mapC.attr("fill", function(d) { return color(d.properties.density); })
+            //d3.select("#legend").remove();
+            
+        
+            
+            clicked2 = 1;
+        } else{
+            color.range(d3.schemeOrRd[9]);
+            
+            tractPath.attr("fill", function(d) { return color(d[0]); });
+            mapC.attr("fill", function(d) { return color(d.properties.density); })
+            
+            
+            //d3.select("#id2").remove();
+            clicked2 = 0;
+
+        }
+        
+    });
+    
+
+var tractPath = g.selectAll("rect")
+  .attr("id","legend")
+  .data(color.range().map(function(d) {
+      d = color.invertExtent(d);
+      if (d[0] == null) d[0] = x.domain()[0];
+      if (d[1] == null) d[1] = x.domain()[1];
+      return d;
+    }))
+  .enter().append("rect")
+    .attr("height", 8)
+    .attr("x", function(d) { return x(d[0]); })
+    .attr("width", function(d) { return x(d[1]) - x(d[0]); })
+    .attr("fill", function(d) { return color(d[0]); });
+    //.attr("id","legend");
+    
+//d3.select("#legend").remove();
+    
+    
+
+    
+    
+    
+    
+    
+
+g.append("text")
+    .attr("class", "caption")
+    .attr("x", x.range()[0])
+    .attr("y", -6)
+    .attr("fill", "#000")
+    .attr("text-anchor", "start")
+    .attr("font-weight", "bold")
+    .text("Population per square mile");
+
+g.call(d3.axisBottom(x)
+    .tickSize(13)
+    .tickValues(color.domain()))
+  .select(".domain")
+    .remove();
+
+d3.json("florida.json", function(error, topology) {
+    if (error) throw error;
+
+    
+    mapC = svg.append("g")
+        .selectAll("path")
+        .data(topojson.feature(topology, topology.objects.tracts).features)
+        .enter().append("path")
+        .attr("fill", function(d) { return color(d.properties.density); })
+        .attr("d", path); 
+      
+      
+    
+svg.append("path")
+      .datum(topojson.mesh(topology, topology.objects.counties, function(a, b) { return a !== b; }))
+      .attr("fill", "none")
+      .attr("stroke", "#000")
+      .attr("stroke-opacity", 0.3)
+      .attr("d", path);
+    
+    
+      
+      
+});
+
+</script>
