@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+
 <body>
 <h1 style = "text-align:center; color:black"><bold> Florida Population Density </bold></h1>    
 
     <pre style="position: absolute; bottom: 100px">
+        <a href="https://chyett.github.io/CSE163/">https://chyett.github.io/CSE163/</a>
         Cyrus Hyett
         Instructor: Suresh Lodha
         CSE163: Data Programming for Visualization
@@ -16,43 +18,70 @@
 <script src="https://d3js.org/topojson.v2.min.js"></script>
 <script>
     
-var clicked = 0;
-var clicked1 = 0;
-var clicked2 = 0;
+/*
+
+Cyrus Hyett
+5/28/20
+
+Sources:
+https://bl.ocks.org/mbostock/5562380
+https://medium.com/@mbostock/command-line-cartography-part-1-897aa8f8ca2c
+https://plnkr.co/edit/nkqA9kcnnbMSIJWXvpF3?p=preview&preview
+https://stackoverflow.com/questions/21490020/remove-line-from-line-graph-in-d3-js
+https://observablehq.com/@d3/color-schemes#Plasma
+
+*/
+    
+    
+    
+    
+    
+    
+    
+//Variables to determine the clicked status of each button.
+var stBound = 0;
+var trctBound = 0;
+var legendColor = 0;
 
 var mapC;
+    
 
+//Declare svg element along with its width and height attributes
 var svg = d3.select("svg"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
+//Path variable for drawing county and tract borders.
 var path = d3.geoPath();
 
+//Declare color variable with a discrete range.
 var color = d3.scaleThreshold()
     .domain([1, 10, 50, 200, 500, 1000, 2000, 4000])
     .range(d3.schemeOrRd[9]);
 
+//Variable for x domain and how density values will scale.
 var x = d3.scaleSqrt()
     .domain([0, 4500])
     .rangeRound([440, 950]);
 
+// declare a g variable which groups SVG shapes together.
 var g = svg.append("g")
     .attr("class", "key")
     .attr("transform", "translate(0,40)");
     
-    
+//First button to toggle the state border on or off.
 var menuDiv = d3.select("body");
 var menuButton = menuDiv.append("button")
     .text("Toggle State Boundary")
     .attr("id", "buttonCentre")
     .classed("button", true)
+    //Clicked function
     .on('click', function(){
-        //d3.select("#buttonCentre").style("background-color", "#ccc")
-        if(clicked == 0){   
+        //Toggle option for turning on state border.
+        if(stBound == 0){   
             d3.json("florida.json", function(error, topology) {
                 if (error) throw error;
-
-
+            //Append a path to the map, in this case the state border.
             svg.append("path")
                   .datum(topojson.mesh(topology, topology.objects.counties, function(a, b) { return a == b; }))
                   .attr("fill", "none")
@@ -63,26 +92,28 @@ var menuButton = menuDiv.append("button")
                 
            });
             
-            
-                
-
-            clicked = 1;
+            stBound = 1;
+        //Toggle option for turning off state border.
         }else{
+            //Remove path with the specified ID, in this case the state boundary.
             d3.select("#id").remove();
-            clicked = 0;
+            stBound = 0;
         }
         
     });
-    
+//Second button to toggle tract borders.
 var menuDiv1 = d3.select("body");
 var menuButton1 = menuDiv1.append("button")
     .text("Toggle Census Tract Boundary")
     .attr("id", "buttonCentre")
     .classed("button", true)
+    //clicked function
     .on('click', function(){
-        if(clicked1 == 0){
+        //Toggle option for turning on tract borders.
+        if(trctBound == 0){
             d3.json("florida.json", function(error, topology) {
                     if (error) throw error;
+                //Append path to map that, in this case, the tract borders.
                 svg.append("path")
                   .datum(topojson.feature(topology, topology.objects.tracts))
                   .attr("fill", "none")
@@ -91,50 +122,56 @@ var menuButton1 = menuDiv1.append("button")
                   .attr("stroke-opacity", 0.2)
                   .attr("d", path);
             });
-            clicked1 = 1;
+            trctBound = 1;
+        //Toggle option for turning off tract borders.
         } else{
-            //d3.select("#buttonCentre").style("background-color", "#ccc")
+            //Remove path with specified ID, in this case tract borders.
             d3.select("#id1").remove();
-            clicked1 = 0;
+            trctBound = 0;
 
         }
         
     });
     
-    
+//Second button for changing the legend color.
 var menuDiv2 = d3.select("body");
 var menuButton2 = menuDiv1.append("button")
     .text("Change Legend Color")
     .attr("id", "buttonCentre")
     .classed("button", true)
+    //clicked function.
     .on('click', function(){
-        //d3.select("#buttonCentre").style("background-color", "#900")
-        if(clicked2 == 0){
+        //Toggle option for pink color scheme.
+        if(legendColor == 0){
+            //Change color variable range to pink and purple
             color.range(d3.schemePuRd[9]);
             
-            tractPath.attr("fill", function(d) { return color(d[0]); });
+            //Change the fill attribute of the map to the new color scheme.
+            legendScm.attr("fill", function(d) { return color(d[0]); });
             mapC.attr("fill", function(d) { return color(d.properties.density); })
-            //d3.select("#legend").remove();
             
         
             
-            clicked2 = 1;
+            legendColor = 1;
+        //Toggle option for original red color scheme.
         } else{
+            //Change color variable range back to red and orange.
             color.range(d3.schemeOrRd[9]);
             
-            tractPath.attr("fill", function(d) { return color(d[0]); });
+            //Change the fill attribute for both the map and legend to the new color scheme.
+            legendScm.attr("fill", function(d) { return color(d[0]); });
             mapC.attr("fill", function(d) { return color(d.properties.density); })
             
             
-            //d3.select("#id2").remove();
-            clicked2 = 0;
+            legendColor = 0;
 
         }
         
     });
     
-
-var tractPath = g.selectAll("rect")
+//Draw and color the legend scheme for identifying population density, and set 
+//variable legendscm to point to it.
+var legendScm = g.selectAll("rect")
   .attr("id","legend")
   .data(color.range().map(function(d) {
       d = color.invertExtent(d);
@@ -147,9 +184,6 @@ var tractPath = g.selectAll("rect")
     .attr("x", function(d) { return x(d[0]); })
     .attr("width", function(d) { return x(d[1]) - x(d[0]); })
     .attr("fill", function(d) { return color(d[0]); });
-    //.attr("id","legend");
-    
-//d3.select("#legend").remove();
     
     
 
@@ -158,7 +192,7 @@ var tractPath = g.selectAll("rect")
     
     
     
-
+//Append the appropriate text to the legend with appropriate x and y coordinates.
 g.append("text")
     .attr("class", "caption")
     .attr("x", x.range()[0])
@@ -168,16 +202,18 @@ g.append("text")
     .attr("font-weight", "bold")
     .text("Population per square mile");
 
+//Append the ticks and number labels to the legend.
 g.call(d3.axisBottom(x)
     .tickSize(13)
     .tickValues(color.domain()))
   .select(".domain")
     .remove();
-
+    
+//function to draw original map and county borders.
 d3.json("florida.json", function(error, topology) {
     if (error) throw error;
 
-    
+    //Append the tracts and colors to the map, and set var mapC to point to it.
     mapC = svg.append("g")
         .selectAll("path")
         .data(topojson.feature(topology, topology.objects.tracts).features)
@@ -186,7 +222,7 @@ d3.json("florida.json", function(error, topology) {
         .attr("d", path); 
       
       
-    
+//Append a path to the map, in this case the inner county borders.  
 svg.append("path")
       .datum(topojson.mesh(topology, topology.objects.counties, function(a, b) { return a !== b; }))
       .attr("fill", "none")
